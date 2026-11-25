@@ -1,0 +1,6 @@
+node_modules/
+# Raw OpenStreetMap downloads (hundreds of MB; re-download with the README commands)
+data-src/
+.DS_Store
+# Built map data (regenerate with scripts/fetch-osm.mjs or the New map panel)
+data/

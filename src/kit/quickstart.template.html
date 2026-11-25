@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{TITLE}}: quickstart</title>
+  <style>
+    body { margin: 0; font: 15px/1.4 system-ui, sans-serif; background: {{PAPER}}; color: {{INK}}; }
+    header { padding: 16px 20px 0; }
+    illustrated-map { height: 75vh; }
+    #out { padding: 8px 20px; }
+    footer { padding: 12px 20px; font-size: 12px; opacity: .7; }
+  </style>
+</head>
+<body>
+  <header><h1>{{TITLE}}</h1></header>
+  <illustrated-map id="map" src="map.json" hide-frame scroll="page"></illustrated-map>
+  <p id="out">Click an area or a place.</p>
+  <footer>{{ATTRIBUTION}}</footer>
+  <script type="module">
+    import "./map-viewer.js";
+    const map = document.getElementById("map");
+    const out = document.getElementById("out");
+    map.addEventListener("area-select", (e) => { out.textContent = `Area: ${e.detail.name} (${e.detail.slug})`; map.focus(e.detail.slug); });
+    map.addEventListener("place-select", (e) => { out.textContent = `Place: ${e.detail.name} (${e.detail.slug})`; });
+  </script>
+</body>
+</html>

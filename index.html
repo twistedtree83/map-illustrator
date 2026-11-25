@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Map Illustrator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <aside>
+    <header>
+      <h1>Map Illustrator</h1>
+      <select id="area" aria-label="Area"></select>
+    </header>
+
+    <details id="builder" open>
+      <summary>New map</summary>
+      <input id="b-search" type="search" placeholder="Search a city, suburb or region…" autocomplete="off" />
+      <ul id="b-results" class="results"></ul>
+      <p class="hint" id="b-empty">Add one region, or several that border each other.</p>
+      <div id="b-chips" class="chips"></div>
+      <div id="b-children" class="children" hidden></div>
+      <div id="b-neighbours" class="neighbours"></div>
+      <label class="stack">Map title <input id="b-title" type="text" placeholder="e.g. Treasure Valley" /></label>
+      <button id="b-build" disabled>Build map</button>
+      <pre id="b-log" class="log" hidden></pre>
+    </details>
+
+    <details open>
+      <summary>Map</summary>
+      <label class="row">Districts <select id="level"></select></label>
+      <label class="row">Palette <select id="palette"></select></label>
+      <label class="row">Labels
+        <select id="labelMode">
+          <option value="legend">Numbers + legend</option>
+          <option value="names">Names on map</option>
+        </select>
+      </label>
+      <label class="stack">Title <input id="title-input" type="text" /></label>
+      <label class="stack">Subtitle <input id="subtitle-input" type="text" placeholder="e.g. Czechia" /></label>
+    </details>
+
+    <details>
+      <summary>Style</summary>
+      <label class="slider">Simplify <output id="simplify-val"></output><input type="range" id="simplify" min="0" max="10" step="0.5" /></label>
+      <label class="slider">Smooth <output id="smooth-val"></output><input type="range" id="smooth" min="0" max="4" step="1" /></label>
+      <label class="slider">Drop shapes under (px²) <output id="minArea-val"></output><input type="range" id="minArea" min="0" max="3000" step="50" /></label>
+      <label class="slider">Outline softness <output id="soften-val"></output><input type="range" id="soften" min="0" max="60" step="2" /></label>
+      <label class="slider">Border width <output id="border-val"></output><input type="range" id="border" min="0" max="4" step="0.2" /></label>
+      <label class="slider">Hand-drawn wobble <output id="wobble-val"></output><input type="range" id="wobble" min="0" max="4" step="0.5" /></label>
+      <label class="slider">River flow speed <output id="flowSpeed-val"></output><input type="range" id="flowSpeed" min="0" max="6" step="0.5" /></label>
+      <label class="slider">Doodles <output id="decorDensity-val"></output><input type="range" id="decorDensity" min="0" max="2" step="0.25" /></label>
+      <div class="checks">
+        <label><input type="checkbox" id="showGreen" /> Parks</label>
+        <label><input type="checkbox" id="showRoads" /> Main roads</label>
+        <label><input type="checkbox" id="showLabels" /> Labels</label>
+        <label><input type="checkbox" id="showRipples" /> Ripples</label>
+        <label><input type="checkbox" id="showDecor" /> Doodles</label>
+        <label><input type="checkbox" id="showIcons" /> Landmark icons</label>
+        <label><input type="checkbox" id="grain" /> Paper grain</label>
+      </div>
+      <button id="reset-params" class="ghost">Reset style</button>
+    </details>
+
+    <details open>
+      <summary>Animation</summary>
+      <label class="slider">Intro speed <output id="introSpeed-val"></output><input type="range" id="introSpeed" min="0.25" max="2" step="0.25" /></label>
+      <div class="checks"><label><input type="checkbox" id="autoplay" /> Play intro when a map loads</label></div>
+      <p class="hint">Screen-record the intro (Cmd+Shift+5) for a quick motion test.</p>
+    </details>
+
+    <details>
+      <summary>Labels</summary>
+      <label class="row">Language
+        <select id="lang">
+          <option value="en">English</option>
+          <option value="local">Local language</option>
+        </select>
+      </label>
+      <p class="hint" id="label-summary"></p>
+      <div class="checks"><label><input type="checkbox" id="label-issues" checked /> Only names that may not be English</label></div>
+      <input id="label-filter" type="search" placeholder="Find a label…" />
+      <ul id="label-list" class="labels"></ul>
+    </details>
+
+    <details open>
+      <summary>Selected areas</summary>
+      <p class="hint" id="selected-empty">Click a district to zoom in. Shift-click to select several.</p>
+      <ul id="selected-list" class="list"></ul>
+      <button id="clear-selection" class="ghost">Clear selection</button>
+    </details>
+
+    <details open>
+      <summary>Points of interest</summary>
+      <ul id="poi-list" class="list"></ul>
+      <p class="hint" id="poi-empty">Tick landmarks below or add your own. Drag pins to move them.</p>
+      <button id="add-poi">+ Add custom point</button>
+      <h3>Real landmarks <small id="landmark-count"></small></h3>
+      <input id="landmark-filter" type="search" placeholder="Filter landmarks…" />
+      <ul id="landmark-list" class="landmarks"></ul>
+    </details>
+
+    <details open>
+      <summary>Export</summary>
+      <div class="buttons">
+        <button id="export-svg">Layered SVG</button>
+        <button id="export-kit" title="map.svg + map.json + component + brief for building a website">Site kit</button>
+        <button id="export-json" class="ghost">Save project</button>
+        <label class="button ghost">Load project<input type="file" id="import-json" accept=".json" hidden /></label>
+      </div>
+      <p class="hint" id="kit-status">Site kit: the map plus a data file and brief so a developer or agent can build a website with clickable areas and places.</p>
+    </details>
+  </aside>
+
+  <main>
+    <svg id="map" role="img" aria-label="Illustrated map"></svg>
+    <p id="map-status" class="status"></p>
+    <div id="tip" class="tip" hidden></div>
+    <p class="nav-hint">Drag or two-finger swipe to move · pinch or scroll wheel to zoom · arrow keys work too</p>
+    <div id="focus-card" class="focus-card" hidden>
+      <button id="focus-close" class="close" aria-label="Back to whole map">×</button>
+      <div>
+        <strong id="focus-name"></strong>
+        <small id="focus-meta"></small>
+      </div>
+      <button id="focus-select" class="ghost">Select area</button>
+    </div>
+    <div class="map-tools">
+      <button id="play-intro">▶ Play intro</button>
+      <div class="zoom-btns" role="group" aria-label="Zoom">
+        <button id="zoom-in" class="ghost" aria-label="Zoom in" title="Zoom in (+)">+</button>
+        <button id="zoom-out" class="ghost" aria-label="Zoom out" title="Zoom out (−)">−</button>
+      </div>
+      <button id="reset-view" class="ghost">Reset view</button>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/clipper.js"></script>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

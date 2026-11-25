@@ -1,0 +1,14 @@
+{
+  "name": "mapinteractive",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch": "node scripts/fetch-osm.mjs",
+    "serve": "python3 scripts/serve.py 8137"
+  },
+  "dependencies": {
+    "osmtogeojson": "^3.0.0-beta.5",
+    "topojson-server": "^3.0.1"
+  }
+}

@@ -1,0 +1,535 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Map Illustrator site kit manifest",
+  "type": "object",
+  "required": [
+    "version",
+    "title",
+    "files",
+    "viewBox",
+    "attribution",
+    "attributionLinks",
+    "palette",
+    "types",
+    "areas",
+    "places",
+    "moreLandmarks"
+  ],
+  "$defs": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "lonlat": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[lon, lat]"
+    },
+    "xy": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[x, y] in SVG units"
+    },
+    "listing": {
+      "type": "object",
+      "required": [
+        "id",
+        "slug",
+        "name",
+        "kind",
+        "typeLabel",
+        "icon",
+        "coord",
+        "svg",
+        "area",
+        "source",
+        "onMap"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "slug": {
+          "$ref": "#/$defs/slug",
+          "description": "Unique across places AND moreLandmarks, so one page template can serve both."
+        },
+        "name": {
+          "type": "string",
+          "description": "English display name."
+        },
+        "localName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Name in the local language, only when it differs and isn't English."
+        },
+        "kind": {
+          "type": "string",
+          "description": "One of types[].kind."
+        },
+        "typeLabel": {
+          "type": "string"
+        },
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Finer category from the source data, if any."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Path to the icon SVG, relative to the kit folder."
+        },
+        "coord": {
+          "$ref": "#/$defs/lonlat"
+        },
+        "svg": {
+          "$ref": "#/$defs/xy"
+        },
+        "area": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/slug"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Area slug; null only for custom pins outside every area."
+        },
+        "wikidata": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Short Wikidata description as a sentence (e.g. 'Suburb of Sydney, New South Wales, Australia.'). A label, not an article."
+        },
+        "wikipedia": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "source": {
+          "enum": [
+            "openstreetmap",
+            "overture",
+            "custom"
+          ]
+        },
+        "onMap": {
+          "type": "boolean"
+        },
+        "address": {
+          "$ref": "#/$defs/address"
+        },
+        "website": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri",
+          "description": "The place's own website (http/https). Link the place name here when present."
+        }
+      }
+    },
+    "address": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Street address. null only if nothing could be found.",
+      "required": [
+        "formatted",
+        "approximate",
+        "source"
+      ],
+      "properties": {
+        "formatted": {
+          "type": "string",
+          "description": "Ready to display, in local style, without the country (e.g. '105 Glossop Rd, Linden NSW 2778')."
+        },
+        "line": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "House number + street, local order."
+        },
+        "housenumber": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "street": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "suburb": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "postcode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "country": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "approximate": {
+          "type": "boolean",
+          "description": "true when derived from the nearest address/street or only the suburb. Say 'near' or omit the house number when showing it."
+        },
+        "source": {
+          "enum": [
+            "osm",
+            "overture",
+            "nearest-address",
+            "nearest-street",
+            "area",
+            "reverse-geocode",
+            "manual",
+            null
+          ]
+        }
+      }
+    }
+  },
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "subtitle": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "files": {
+      "type": "object",
+      "properties": {
+        "svg": {
+          "type": "string"
+        },
+        "viewer": {
+          "type": "string"
+        },
+        "icons": {
+          "type": "string"
+        }
+      }
+    },
+    "viewBox": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "attribution": {
+      "type": "string",
+      "description": "Plain-text credit. Must be displayed wherever the map or its data is shown."
+    },
+    "attributionLinks": {
+      "type": "array",
+      "description": "The same credit as links; prefer these in HTML.",
+      "items": {
+        "type": "object",
+        "required": [
+          "text",
+          "href"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "dataSources": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "palette": {
+      "type": "object",
+      "properties": {
+        "paper": {
+          "type": "string"
+        },
+        "card": {
+          "type": "string"
+        },
+        "ink": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "land": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "water": {
+          "type": "string"
+        },
+        "green": {
+          "type": "string"
+        },
+        "accent": {
+          "type": "string"
+        },
+        "accent2": {
+          "type": "string"
+        },
+        "roof": {
+          "type": "string"
+        },
+        "selected": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "fonts": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "types": {
+      "type": "array",
+      "description": "Every kind used by places or moreLandmarks, most common first.",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "icon",
+          "onMap",
+          "landmarks"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "onMap": {
+            "type": "integer",
+            "description": "How many places of this kind are drawn on the map."
+          },
+          "landmarks": {
+            "type": "integer",
+            "description": "How many moreLandmarks of this kind."
+          }
+        }
+      }
+    },
+    "areas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "bbox",
+          "center",
+          "color",
+          "neighbours",
+          "places",
+          "placeCount",
+          "landmarks",
+          "landmarkCount"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "$ref": "#/$defs/slug"
+          },
+          "name": {
+            "type": "string"
+          },
+          "localName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "number": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Number on the map's badge/legend."
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Which of the entered regions it belongs to."
+          },
+          "wikidata": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "wikipedia": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "center": {
+            "$ref": "#/$defs/lonlat"
+          },
+          "svgCenter": {
+            "$ref": "#/$defs/xy"
+          },
+          "bbox": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4,
+            "description": "[x, y, width, height] in SVG units"
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The fill this area is drawn with on the map."
+          },
+          "neighbours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/slug"
+            }
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/slug"
+            },
+            "description": "Places drawn on the map in this area."
+          },
+          "placeCount": {
+            "type": "integer"
+          },
+          "landmarks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/slug"
+            },
+            "description": "moreLandmarks in this area."
+          },
+          "landmarkCount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "places": {
+      "type": "array",
+      "description": "Places drawn on the map (clickable icons).",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/listing"
+          },
+          {
+            "properties": {
+              "onMap": {
+                "const": true
+              },
+              "fields": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Extra data added by the map owner, e.g. phone, website, hours."
+              }
+            }
+          }
+        ]
+      }
+    },
+    "moreLandmarks": {
+      "type": "array",
+      "description": "Other landmarks inside the map, not drawn on it. Same shape as places.",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/listing"
+          },
+          {
+            "properties": {
+              "onMap": {
+                "const": false
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

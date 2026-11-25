@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Area</title>
+  <link rel="stylesheet" href="assets/site.css">
+  <script type="module" src="../map-viewer.js"></script>
+  <script type="module" src="assets/area.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="masthead">
+    <a class="brand" href="index.html" data-kit-title>Map directory</a>
+    <p class="stats" data-kit-stats></p>
+  </header>
+
+  <main id="main">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <ol><li><a href="index.html">Directory</a></li><li aria-current="page" id="crumb">Area</li></ol>
+    </nav>
+    <div class="detail">
+      <div class="head" id="head"></div>
+      <section class="map-pane" aria-label="Map">
+        <div class="map-frame">
+          <illustrated-map id="map" src="../map.json" hide-frame></illustrated-map>
+        </div>
+        <p class="map-hint">Pick another area or an icon on the map to go there. Esc or ⤢ shows the whole map.</p>
+      </section>
+      <div class="body" id="body"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="inner">
+      <p class="attribution" data-kit-attribution>© OpenStreetMap contributors (ODbL) · Overture Maps Foundation</p>
+      <p class="small" data-kit-generated></p>
+    </div>
+  </footer>
+</body>
+</html>

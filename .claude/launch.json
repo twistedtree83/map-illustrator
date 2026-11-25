@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "map-editor",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["scripts/serve.py", "8137"],
+      "port": 8137,
+      "autoPort": false
+    }
+  ]
+}

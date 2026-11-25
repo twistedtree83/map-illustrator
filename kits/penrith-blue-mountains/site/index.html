@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Map directory</title>
+  <meta name="description" content="An illustrated map and directory of areas, places and landmarks.">
+  <link rel="stylesheet" href="assets/site.css">
+  <script type="module" src="../map-viewer.js"></script>
+  <script type="module" src="assets/home.js"></script>
+</head>
+<body>
+  <a class="skip" href="#directory">Skip to the directory</a>
+
+  <header class="masthead">
+    <a class="brand" href="index.html" data-kit-title>Map directory</a>
+    <p class="stats" data-kit-stats></p>
+  </header>
+
+  <main id="main">
+    <div class="home">
+      <section class="map-pane" aria-label="Map">
+        <div class="map-frame">
+          <illustrated-map id="map" src="../map.json" hide-frame></illustrated-map>
+        </div>
+        <p class="map-hint">Drag to pan, scroll or pinch to zoom, then pick an area or an icon. Everything on the map is also in the directory.</p>
+      </section>
+
+      <section class="finder" aria-labelledby="finder-title">
+        <h1 id="finder-title" class="visually-hidden">Directory</h1>
+        <div class="controls">
+          <form class="search" role="search" onsubmit="return false">
+            <label for="q" class="visually-hidden">Search areas, places and landmarks</label>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+            <input id="q" type="search" placeholder="Search areas, places, landmarks" autocomplete="off" spellcheck="false">
+            <button type="button" class="clear" aria-label="Clear search" hidden>×</button>
+          </form>
+          <div>
+            <p class="label" id="types-label">Filter by type</p>
+            <div class="chips" id="chips" role="group" aria-labelledby="types-label"></div>
+          </div>
+          <p class="status" id="status" aria-live="polite"></p>
+        </div>
+        <div id="directory" class="directory" tabindex="-1"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="inner">
+      <p class="attribution" data-kit-attribution>© OpenStreetMap contributors (ODbL) · Overture Maps Foundation</p>
+      <p class="small" data-kit-generated></p>
+    </div>
+  </footer>
+</body>
+</html>
