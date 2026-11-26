@@ -84,6 +84,13 @@ save any `.osm.pbf` into `data-src/`. Every file there is checked. Re-run the `c
 to refresh the data (monthly is plenty). `data-src/` is git-ignored.
 `--no-local` forces the public servers.
 
+Search in **New map** also uses these files: `scripts/area-index.mjs` lists every named
+area outline in them (councils, suburbs, localities, regions) into
+`data-src/<file>.areas.json` (about a minute, redone automatically when the file changes).
+Results from it are instant. The public OpenStreetMap search is only asked when nothing local
+matches well. Informal regions with no outline in OpenStreetMap (e.g. "Western Sydney",
+"Hunter Region") can't be picked as one area; add their councils instead.
+
 ## Site kit (build a website around a map)
 
 **Export → Site kit** writes `kits/<map-name>/`:

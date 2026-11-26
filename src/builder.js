@@ -36,35 +36,101 @@ function describe(h) {
   return `${type} · ≈ ${size}`;
 }
 
+const sizeText = (km2) => (km2 < 10 ? `${km2.toFixed(1)} km²` : km2 < 10000 ? `${Math.round(km2).toLocaleString()} km²` : `${Math.round(km2 / 1000).toLocaleString()}k km²`);
+const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
+
+function resultItem({ name, badge, detail, onAdd }) {
+  const li = document.createElement("li");
+  li.innerHTML = `<button type="button"><strong>${escHTML(name)}</strong><span class="badge">${escHTML(badge)}</span><small>${escHTML(detail || "")}</small></button>`;
+  li.querySelector("button").onclick = () => {
+    onAdd();
+    $("b-results").replaceChildren();
+    $("b-search").value = "";
+  };
+  return li;
+}
+
+function heading(ul, text) {
+  const li = document.createElement("li");
+  li.className = "muted group";
+  li.textContent = text;
+  ul.append(li);
+}
+
+const noOutline = (q) =>
+  `<li class="muted">No area called “${escHTML(q.trim())}” has an outline in OpenStreetMap. Informal regions (like Western Sydney) often don't: add one of its councils or suburbs instead, then pick the neighbours suggested under it.</li>`;
+
+// Downloaded data first (instant, via the dev server), then the public
+// OpenStreetMap search for anything outside it or with no good local match.
 async function search(q) {
   const seq = ++searchSeq;
   const ul = $("b-results");
   if (q.trim().length < 2) { ul.replaceChildren(); return; }
-  ul.innerHTML = `<li class="muted">Searching…</li>`;
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=10&addressdetails=0&extratags=1&q=${encodeURIComponent(q)}`;
-    const all = await (await fetch(url, { headers: { "Accept-Language": "en" } })).json();
-    const hits = all.filter((h) => h.osm_type === "relation" && h.category === "boundary" || h.osm_type === "relation" && h.addresstype !== "island");
-    // Landmarks/points ("Echo Point", "Three Sisters"): offer the area they're in.
-    const spots = all.filter((h) => !hits.includes(h)).slice(0, 3);
-    if (seq !== searchSeq) return;
-    ul.replaceChildren();
-    if (spots.length) suggestContaining(spots, ul, seq);
-    if (!hits.length && !spots.length) { ul.innerHTML = `<li class="muted">Nothing found. Try adding the state or country.</li>`; return; }
-    for (const h of hits.slice(0, 6)) {
-      const li = document.createElement("li");
-      const [first, ...rest] = h.display_name.split(", ");
-      li.innerHTML = `<button type="button"><strong>${escHTML(first)}</strong><span class="badge">${escHTML(describe(h))}</span><small>${escHTML(rest.slice(0, 3).join(", "))}</small></button>`;
-      li.querySelector("button").onclick = () => {
-        add({ id: h.osm_id, name: first, detail: rest.slice(0, 2).join(", "), qid: h.extratags?.wikidata });
-        ul.replaceChildren();
-        $("b-search").value = "";
-      };
-      ul.append(li);
-    }
-  } catch {
-    ul.innerHTML = `<li class="muted">Search failed — check your connection.</li>`;
+  if (!ul.children.length) ul.innerHTML = `<li class="muted">Searching…</li>`;
+  const seen = new Set();
+
+  let local = { local: false, results: [] };
+  try { local = await (await fetch(`api/search?q=${encodeURIComponent(q)}`)).json(); } catch {}
+  if (seq !== searchSeq) return;
+  ul.replaceChildren();
+  for (const r of local.results) {
+    seen.add(r.id);
+    ul.append(resultItem({
+      name: r.name, badge: `${r.kind} · ≈ ${sizeText(r.km2)}`, detail: r.in,
+      onAdd: () => add({ id: r.id, name: r.name, detail: r.in || "", qid: r.wikidata }),
+    }));
   }
+  const good = local.results.some((r) => r.score >= 80);
+  if (good) return;
+
+  // Public search: wait for typing to settle (Nominatim allows 1 request/second).
+  const note = document.createElement("li");
+  note.className = "muted";
+  note.textContent = local.local ? "Searching OpenStreetMap too…" : "Searching…";
+  ul.append(note);
+  await sleep(600);
+  if (seq !== searchSeq) return;
+  let all = [];
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=15&addressdetails=0&extratags=1&layer=address&q=${encodeURIComponent(q)}`;
+    all = await (await fetch(url, { headers: { "Accept-Language": "en" } })).json();
+  } catch {
+    if (seq === searchSeq) note.textContent = local.results.length ? "" : "Search failed — check your connection.";
+    return;
+  }
+  if (seq !== searchSeq) return;
+  note.remove();
+  const hits = all.filter((h) => h.osm_type === "relation" && h.addresstype !== "island" && !seen.has(h.osm_id)).slice(0, 6);
+  if (hits.length) {
+    if (local.results.length) heading(ul, local.local ? "Outside the downloaded data" : "More");
+    for (const h of hits) {
+      const [first, ...rest] = h.display_name.split(", ");
+      ul.append(resultItem({
+        name: first, badge: describe(h), detail: rest.slice(0, 3).join(", "),
+        onAdd: () => add({ id: h.osm_id, name: first, detail: rest.slice(0, 2).join(", "), qid: h.extratags?.wikidata }),
+      }));
+    }
+  }
+  if (local.results.length || hits.length) return;
+  // A landmark name ("Echo Point"): offer the area it's in. Searched separately
+  // (the area search above skips points), inside the downloaded region if any.
+  await sleep(1000);
+  if (seq !== searchSeq) return;
+  try {
+    const box = local.bounds ? `&viewbox=${local.bounds.join(",")}&bounded=1` : "";
+    const pts = await (await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&q=${encodeURIComponent(q)}${box}`, { headers: { "Accept-Language": "en" } })).json();
+    const norm = (t) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    const words = norm(q).split(/[^a-z0-9]+/).filter(Boolean);
+    const spots = pts
+      .filter((h) => /^(tourism|natural|historic|leisure|amenity|building|man_made|waterway|place)$/.test(h.category))
+      .filter((h) => words.every((w) => norm(h.name || "").includes(w)))
+      .slice(0, 2);
+    if (seq !== searchSeq) return;
+    ul.innerHTML = noOutline(q);
+    if (spots.length) { heading(ul, "Places with that name"); return suggestContaining(spots, ul, seq); }
+  } catch {}
+  if (seq !== searchSeq) return;
+  ul.innerHTML = noOutline(q);
 }
 
 // For a landmark/point result, find the suburb or town that contains it
@@ -361,7 +427,7 @@ async function build(onBuilt) {
 export function initBuilder({ onBuilt }) {
   $("b-search").addEventListener("input", (e) => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => search(e.target.value), 650); // stay well under Nominatim's 1 req/s
+    searchTimer = setTimeout(() => search(e.target.value), 150); // local first; the public search waits longer
   });
   $("b-title").addEventListener("input", (e) => (e.target.dataset.touched = e.target.value ? "1" : ""));
   $("b-build").onclick = () => build(onBuilt);
